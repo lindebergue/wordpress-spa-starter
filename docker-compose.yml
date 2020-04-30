@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  theme:
+    build: .
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_NAME: '${DB_NAME}'
+      WORDPRESS_DB_PASSWORD: '${DB_ROOT_PASSWORD}'
+      WORDPRESS_DEBUG: '${DEBUG}'
+    volumes:
+        - ./theme:/var/www/html/wp-content/themes/custom-theme
+        - ./plugins/advanced-custom-fields-pro:/var/www/html/wp-content/plugins/advanced-custom-fields-pro
+        - ./config/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    command: [
+      '--default_authentication_plugin=mysql_native_password',
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci'
+    ]
+    environment:
+      MYSQL_DATABASE: '${DB_NAME}'
+      MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'

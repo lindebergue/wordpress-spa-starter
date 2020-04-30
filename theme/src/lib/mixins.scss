@@ -1,0 +1,25 @@
+@import './variables';
+
+@mixin transition($properties...) {
+  transition-property: $properties;
+  transition-duration: .3s;
+  transition-timing-function: $timing-function;
+  will-change: $properties;
+}
+
+@mixin animation($name, $duration: .5s, $delay: null, $paused: false, $infinite: false) {
+  animation-name: $name;
+  animation-duration: $duration;
+
+  @if $delay != null {
+    animation-delay: $delay;
+  }
+
+  @if $paused == true {
+    animation-play-state: paused;
+  }
+
+  @if $infinite == true {
+    animation-iteration-count: infinite;
+  }
+}
