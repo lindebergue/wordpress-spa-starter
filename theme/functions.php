@@ -45,7 +45,9 @@ function setup_theme_notices() {
 	if ( ! function_exists('acf_add_options_page') ) {
 		echo '<div class="error"><p>Importante: O tema requer o plugin <a href="https://www.advancedcustomfields.com/">Advanced Custom Fields</a> para funcionar corretamente. <a href="' . admin_url( 'plugins.php' ) . '">Verifique</a> se o plugin está instalado e ativo.</p></div>';
 	}
-
+	if ( ! function_exists('wpcf7_contact_form') ) {
+		echo '<div class="error"><p>Importante: O tema requer o plugin <a href="https://www.contactform7.com/">Contact Form 7</a> para funcionar corretamente. <a href="' . admin_url( 'plugins.php' ) . '">Verifique</a> se o plugin está instalado e ativo.</p></div>';
+	}
 	if ( empty( get_option( 'permalink_structure' ) ) ) {
 		echo '<div class="error"><p>Importante: O tema requer uma estrutura de links personalizada para funcionar corretamente. Defina uma nas <a href="' . admin_url( 'options-permalink.php' ) . '">configurações.</a></div>';
 	}
@@ -110,6 +112,32 @@ function register_rest_routes() {
 			return [];
 		}
 	] );
+
+	if ( function_exists( 'wpcf7_contact_form' ) ) {
+		register_rest_route( 'theme/v1', '/contact', [
+			'methods' => 'POST',
+			'callback' => function ( $request ) {
+				$form = wpcf7_contact_form( get_field( 'contact_form', 'option' ) );
+				if ( ! $form ) {
+					return new WP_REST_Response( null, 404 );
+				}
+
+				$result = $form->submit();
+				if ( $result[ 'status' ] === 'validation_failed' ) {
+					$errors = [];
+					foreach ( $result[ 'invalid_fields' ] as $name => $details ) {
+						$errors[] = [
+							'field' => $name,
+							'error' => $details[ 'reason' ]
+						];
+					}
+					return new WP_REST_Response( [ 'errors' => $errors ], 400 );
+				}
+
+				return new WP_REST_Response( null, 200 );
+			}
+		] );
+	}
 }
 add_action( 'rest_api_init', 'register_rest_routes' );
 
@@ -117,6 +145,13 @@ add_action( 'rest_api_init', 'register_rest_routes' );
  * Setup Advanced Custom Fields features required for the theme.
  */
 function setup_acf_features() {
+	$contact_forms = [];
+	if ( class_exists( 'WPCF7_ContactForm' ) ) {
+		foreach( WPCF7_ContactForm::find() as $form ) {
+			$contact_forms[ $form->id() ] = $form->title();
+		}
+	}
+
 	acf_add_local_field_group( [
 		'key' => 'theme_options',
 		'title' => 'Opções do Tema',
@@ -130,6 +165,14 @@ function setup_acf_features() {
 			],
 		],
 		'fields' => [
+			[
+				'key' => 'theme_options.contact_form',
+				'label' => 'Formulário de contato',
+				'name' => 'contact_form',
+				'instructions' => 'Formulário para ser utilizado na página de contato',
+				'type' => 'select',
+				'choices' => $contact_forms
+			]
 		]
 	] );
 }
