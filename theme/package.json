@@ -48,7 +48,7 @@
     "stylelint": "^13.0.0",
     "stylelint-config-recommended-scss": "^4.1.0",
     "stylelint-scss": "^3.11.0",
-    "three": "^0.115.0",
+    "three": "^0.125.0",
     "ts-loader": "^6.2.1",
     "typescript": "^3.7.4",
     "url-loader": "^3.0.0",
